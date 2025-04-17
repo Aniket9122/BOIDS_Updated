@@ -44,6 +44,56 @@ class BaseEnvironment:
             self.obstacles.append(('circle', center, radius, color))
         else:
             raise ValueError(f"Unknown shape: {shape}")
+        
+    def _resolve_collision(self, bird):
+        """
+        Prevent birds from entering obstacles by clamping them to the surface
+        and removing the velocity component into the obstacle (no reflection).
+        """
+        for obs in self.obstacles:
+            if obs[0] == 'rect':
+                _, rect, _ = obs
+                if rect.collidepoint(bird.position):
+                    # distances to each side
+                    d_left   = bird.position.x - rect.left
+                    d_right  = rect.right - bird.position.x
+                    d_top    = bird.position.y - rect.top
+                    d_bottom = rect.bottom - bird.position.y
+                    min_pen = min(d_left, d_right, d_top, d_bottom)
+
+                    if min_pen == d_left:
+                        bird.position.x = rect.left
+                        if bird.velocity.x < 0:
+                            bird.velocity.x = 0
+                    elif min_pen == d_right:
+                        bird.position.x = rect.right
+                        if bird.velocity.x > 0:
+                            bird.velocity.x = 0
+                    elif min_pen == d_top:
+                        bird.position.y = rect.top
+                        if bird.velocity.y < 0:
+                            bird.velocity.y = 0
+                    else:  # bottom
+                        bird.position.y = rect.bottom
+                        if bird.velocity.y > 0:
+                            bird.velocity.y = 0
+
+            elif obs[0] == 'circle':
+                _, center, radius, _ = obs
+                center_v = pygame.Vector2(center)
+                to_bird  = bird.position - center_v
+                dist     = to_bird.length()
+
+                if dist < radius:
+                    # compute outward normal
+                    normal = (to_bird / dist) if dist != 0 else pygame.Vector2(1, 0)
+                    # clamp position to rim
+                    bird.position = center_v + normal * radius
+                    # remove only the inward (negative) velocity component
+                    vn = bird.velocity.dot(normal)
+                    if vn < 0:
+                        bird.velocity -= normal * vn
+
 
     def update(self):
         for b in self.birds:
@@ -54,10 +104,16 @@ class BaseEnvironment:
                 b.apply_force( b.cohesion(self.birds) )
             if self.use_separation:
                 b.apply_force( b.separation(self.birds) )
+            # apply force to prevent obstacle collisions
+            obs_force = b.avoid_obstacles(self.obstacles)
+            b.apply_force(obs_force)
+            b.apply_force(b.avoid_obstacles(self.obstacles))
             b.update()
             # wrap‐around
             b.position.x %= self.width
             b.position.y %= self.height
+            # prevent obstacle pass through
+            self._resolve_collision(b)
 
     def render(self):
         self.screen.fill((0, 0, 0))
