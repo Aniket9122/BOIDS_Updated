@@ -109,3 +109,4 @@ class Bird:
         left  = self.position + pygame.Vector2(-5, 5).rotate(-angle)
         right = self.position + pygame.Vector2(-5, -5).rotate(-angle)
         pygame.draw.polygon(screen, (255, 255, 255), [head, left, right])
+ 
