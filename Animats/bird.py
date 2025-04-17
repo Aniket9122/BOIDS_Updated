@@ -1,3 +1,5 @@
+import pygame, random
+
 import pygame
 import random
 
@@ -10,60 +12,90 @@ class Bird:
         self.acceleration = pygame.Vector2(0, 0)
         self.max_speed = 4      # matches pilot.py
         self.max_force = 0.1    # matches pilot.py
-        self.perception = 50    # matches pilot.py
+        self.perception = 50    # perception radius
 
     def apply_force(self, force):
+        """Accumulate steering force into acceleration."""
         self.acceleration += force
 
-    def flock(self, boids):
-        alignment = pygame.Vector2(0, 0)
-        cohesion  = pygame.Vector2(0, 0)
-        separation = pygame.Vector2(0, 0)
+    def alignment(self, boids):
+        """
+        Steer towards average heading of local flockmates.
+        """
+        steering = pygame.Vector2(0, 0)
         total = 0
-
         for other in boids:
             if other is not self:
                 distance = self.position.distance_to(other.position)
                 if distance < self.perception:
-                    # alignment
-                    alignment += other.velocity
-                    # cohesion
-                    cohesion += other.position
-                    # separation
-                    diff = self.position - other.position
-                    if distance > 0:
-                        diff /= distance
-                    separation += diff
+                    steering += other.velocity
                     total += 1
-
         if total > 0:
-            # ALIGNMENT
-            alignment /= total
-            alignment.scale_to_length(self.max_speed)
-            alignment -= self.velocity
-            if alignment.length() > self.max_force:
-                alignment.scale_to_length(self.max_force)
-            self.apply_force(alignment)
+            steering /= total
+            steering.scale_to_length(self.max_speed)
+            steering -= self.velocity
+            if steering.length() > self.max_force:
+                steering.scale_to_length(self.max_force)
+        return steering
 
-            # COHESION
-            cohesion /= total
-            cohesion = cohesion - self.position
-            cohesion.scale_to_length(self.max_speed)
-            cohesion -= self.velocity
-            if cohesion.length() > self.max_force:
-                cohesion.scale_to_length(self.max_force)
-            self.apply_force(cohesion)
+    def cohesion(self, boids):
+        """
+        Steer towards average position of local flockmates.
+        """
+        steering = pygame.Vector2(0, 0)
+        total = 0
+        for other in boids:
+            if other is not self:
+                distance = self.position.distance_to(other.position)
+                if distance < self.perception:
+                    steering += other.position
+                    total += 1
+        if total > 0:
+            steering /= total
+            steering = (steering - self.position)
+            steering.scale_to_length(self.max_speed)
+            steering -= self.velocity
+            if steering.length() > self.max_force:
+                steering.scale_to_length(self.max_force)
+        return steering
 
-            # SEPARATION
-            separation /= total
-            separation.scale_to_length(self.max_speed)
-            separation -= self.velocity
-            if separation.length() > self.max_force:
-                separation.scale_to_length(self.max_force)
-            self.apply_force(separation)
+    def separation(self, boids):
+        """
+        Steer to avoid crowding local flockmates.
+        """
+        steering = pygame.Vector2(0, 0)
+        total = 0
+        for other in boids:
+            if other is not self:
+                distance = self.position.distance_to(other.position)
+                if distance < self.perception and distance > 0:
+                    diff = (self.position - other.position) / distance
+                    steering += diff
+                    total += 1
+        if total > 0:
+            steering /= total
+            steering.scale_to_length(self.max_speed)
+            steering -= self.velocity
+            if steering.length() > self.max_force:
+                steering.scale_to_length(self.max_force)
+        return steering
+
+    def flock(self, boids):
+        """
+        Calculate and apply steering from alignment, cohesion, and separation.
+        """
+        align_force = self.alignment(boids)
+        coh_force   = self.cohesion(boids)
+        sep_force   = self.separation(boids)
+
+        self.apply_force(align_force)
+        self.apply_force(coh_force)
+        self.apply_force(sep_force)
+
+
 
     def update(self):
-        # integrate physics
+        """Integrate acceleration into velocity and position."""
         self.velocity += self.acceleration
         if self.velocity.length() > self.max_speed:
             self.velocity.scale_to_length(self.max_speed)
@@ -71,9 +103,10 @@ class Bird:
         self.acceleration = pygame.Vector2(0, 0)
 
     def draw(self, screen):
-        # draw as triangle pointing along velocity
+        """Draw the bird as a triangle pointing in direction of its velocity."""
         angle = self.velocity.angle_to(pygame.Vector2(1, 0))
         head  = self.position + pygame.Vector2(10, 0).rotate(-angle)
         left  = self.position + pygame.Vector2(-5, 5).rotate(-angle)
         right = self.position + pygame.Vector2(-5, -5).rotate(-angle)
         pygame.draw.polygon(screen, (255, 255, 255), [head, left, right])
+ 
