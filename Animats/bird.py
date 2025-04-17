@@ -80,6 +80,45 @@ class Bird:
                 steering.scale_to_length(self.max_force)
         return steering
 
+    def avoid_obstacles(self, obstacles):
+        """
+        Steer away from nearby obstacles.
+        obstacles: list of tuples as defined in BaseEnvironment.obstacles
+        """
+        steer = pygame.Vector2(0, 0)
+        total = 0
+
+        for obs in obstacles:
+            if obs[0] == 'rect':
+                _, rect, _ = obs
+                # closest point on rect to bird
+                cx = max(rect.left,   min(self.position.x, rect.right))
+                cy = max(rect.top,    min(self.position.y, rect.bottom))
+                diff = self.position - pygame.Vector2(cx, cy)
+                dist = diff.length()
+                if 0 < dist < self.perception:
+                    diff.normalize_ip()
+                    steer += diff / dist
+                    total += 1
+
+            elif obs[0] == 'circle':
+                _, center, radius, _ = obs
+                diff = self.position - pygame.Vector2(center)
+                dist = diff.length() - radius
+                if 0 < dist < self.perception:
+                    diff.normalize_ip()
+                    steer += diff / dist
+                    total += 1
+
+        if total > 0:
+            steer /= total
+            steer.scale_to_length(self.max_speed)
+            steer -= self.velocity
+            if steer.length() > self.max_force:
+                steer.scale_to_length(self.max_force)
+
+        return steer
+
     def flock(self, boids):
         """
         Calculate and apply steering from alignment, cohesion, and separation.

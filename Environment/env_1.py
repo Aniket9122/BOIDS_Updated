@@ -6,7 +6,7 @@ class Env1(BaseEnvironment):
         super().__init__(width, height)
 
         # rectangle half the env size, centered
-        rect_w, rect_h = width // 2, height // 2
+        rect_w, rect_h = width // 3, height // 3
         x = (width - rect_w) / 2
         y = (height - rect_h) / 2
 
