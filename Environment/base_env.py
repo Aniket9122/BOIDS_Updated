@@ -25,6 +25,10 @@ class BaseEnvironment:
             x = random.uniform(0, self.width)
             y = random.uniform(0, self.height)
             self.birds.append(Bird(x, y))
+    
+    def add_bird(self, x, y):
+        """Spawn a new bird at the given screen coordinates."""
+        self.birds.append(Bird(x, y))
             
     def create_obstacle(self, shape, **kwargs):
         """
