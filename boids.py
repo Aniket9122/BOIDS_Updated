@@ -37,6 +37,8 @@ while running:
                 env.use_cohesion  = not env.use_cohesion
             elif separ_btn.collidepoint(x,y):
                 env.use_separation = not env.use_separation
+            else:
+                env.add_bird(x, y)
 
     # update & draw flock
     env.update()
