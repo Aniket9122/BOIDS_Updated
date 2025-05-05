@@ -1,8 +1,11 @@
 # Environment/base_env.py
-import pygame, random
+import pygame, random, math
 from Animats.bird import Bird
 
-NUM_BIRDS = 30
+NUM_BIRDS = 50
+TARGET_X = 0
+TARGET_Y = 0
+RESPAWN_DIST = 200
 
 class BaseEnvironment:
     def __init__(self, width, height):
@@ -10,7 +13,7 @@ class BaseEnvironment:
         self.height = height
         self.birds  = []
         self.obstacles = []
-        self.use_targets = False          # GUI toggle – default OFF
+        self.use_targets = True          # GUI toggle – default OFF
         self.targets = []
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("Boids with Toggles")
@@ -166,6 +169,28 @@ class BaseEnvironment:
                     if vn < 0:
                         bird.velocity -= normal * vn
 
+    def check_birds_in_target(self):
+        counter = 0
+        for b in self.birds:
+            if b.target == True:
+                counter += 1
+        if counter > 0.8 * len(self.birds):
+            return True
+        else:
+            return False
+    
+    def update_birds_in_target(self):
+        for t in self.targets:
+            for b in self.birds:
+                dx = b.position.x - t[0].x
+                dy = b.position.y - t[0].y
+                distance = math.hypot(dx, dy)
+                if distance <= t[1]:
+                    b.target = True
+    
+    def clear_birds_target(self):
+        for b in self.birds:
+            b.target = False
 
     def update(self):
         for b in self.birds:
