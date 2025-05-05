@@ -10,6 +10,9 @@ clock  = pygame.time.Clock()
 env = Env2(WIDTH, HEIGHT)
 env.populate_environment()
 
+# For Victors Test
+env.create_target()
+
 # button layout
 FONT = pygame.font.SysFont(None, 24)
 BTN_W, BTN_H, M = 140, 30, 10
@@ -34,6 +37,9 @@ def draw_round_button(rect, text, active):
     screen.blit(lbl, lbl.get_rect(center=rect.center))
 
 running = True
+start_time = pygame.time.get_ticks()
+time_list = []
+target_pos = []
 while running:
     for ev in pygame.event.get():
         if ev.type == pygame.QUIT:
@@ -49,8 +55,7 @@ while running:
             elif target_btn.collidepoint(x, y):
                 env.use_targets = not env.use_targets           
                 if env.use_targets:
-                    env.create_target()
-                    env.create_target()                         
+                    env.create_target()                        
                 else:
                     env.clear_targets()                         
             elif obstacle_btn.collidepoint(x, y):
@@ -59,6 +64,18 @@ while running:
                 env.clear_obstacles()
             else:
                 env.add_bird(x, y)
+    
+    
+    env.update_birds_in_target()
+    if env.check_birds_in_target() == True:
+        print(pygame.time.get_ticks() - start_time)
+        time_list.append(pygame.time.get_ticks() - start_time)
+        start_time = pygame.time.get_ticks()
+        target_pos.append(env.targets[0][0])
+        env.clear_targets()
+        env.clear_birds_target()
+        env.create_target()
+        
 
     # update & draw flock
     env.update()
@@ -76,3 +93,5 @@ while running:
     clock.tick(60)
 
 pygame.quit()
+print(time_list)
+print([[x, y] for x, y in target_pos])
