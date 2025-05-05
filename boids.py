@@ -107,6 +107,7 @@ print([float(d) for d in distances])
 
 # Calculate speed (distance/time) and plot speed vs number of plots
 speeds = [distances[i] / time_list[i + 1] for i in range(len(distances))]
+print(f'Average Speed: {speeds/len(speeds)}')
 
 # Plot speed vs number of plots
 plt.figure(figsize=(10, 6))
