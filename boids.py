@@ -17,10 +17,18 @@ BTN_W, BTN_H, M = 140, 30, 10
 align_btn    = pygame.Rect(M, M, BTN_W, BTN_H)
 cohesion_btn = pygame.Rect(M, M+BTN_H+M, BTN_W, BTN_H)
 separ_btn    = pygame.Rect(M, M+2*(BTN_H+M), BTN_W, BTN_H)
+target_btn = pygame.Rect(M, M + 3*(BTN_H + M), BTN_W, BTN_H)
 
 def draw_button(rect, text, active):
     col = (  0,200,  0) if active else (200,  0,  0)
     pygame.draw.rect(screen, col, rect)
+    lbl = FONT.render(text, True, (255,255,255))
+    screen.blit(lbl, lbl.get_rect(center=rect.center))
+
+def draw_round_button(rect, text, active):
+    col = (  0,120,  0) if active else (120,  0,  0)       # darker than rule buttons
+    pygame.draw.rect(screen, col, rect, border_radius=12)  # filled
+    pygame.draw.rect(screen, (255,255,255), rect, width=2, border_radius=12)
     lbl = FONT.render(text, True, (255,255,255))
     screen.blit(lbl, lbl.get_rect(center=rect.center))
 
@@ -37,6 +45,12 @@ while running:
                 env.use_cohesion  = not env.use_cohesion
             elif separ_btn.collidepoint(x,y):
                 env.use_separation = not env.use_separation
+            elif target_btn.collidepoint(x, y):
+                env.use_targets = not env.use_targets           # toggle flag
+                if env.use_targets:
+                    env.create_target()                         # spawn one
+                else:
+                    env.clear_targets()                         # wipe any existing
             else:
                 env.add_bird(x, y)
 
@@ -48,6 +62,7 @@ while running:
     draw_button(separ_btn,    "Separation", env.use_separation)
     draw_button(align_btn,    "Alignment",  env.use_alignment)
     draw_button(cohesion_btn, "Cohesion",   env.use_cohesion)
+    draw_round_button(target_btn, "Enable targets", env.use_targets)
 
     pygame.display.flip()
     clock.tick(60)

@@ -10,8 +10,8 @@ class Bird:
         self.velocity = pygame.Vector2(random.uniform(-2, 2),
                                        random.uniform(-2, 2))
         self.acceleration = pygame.Vector2(0, 0)
-        self.max_speed = 4      # matches pilot.py
-        self.max_force = 0.1    # matches pilot.py
+        self.max_speed = 2      
+        self.max_force = 0.1    
         self.perception = 50    # perception radius
 
     def apply_force(self, force):
@@ -131,6 +131,37 @@ class Bird:
         self.apply_force(coh_force)
         self.apply_force(sep_force)
 
+    def seek_target(self, targets):
+        """
+        Return a steering force that guides the bird toward the nearest
+        target centre but switches off once the bird is *inside* the
+        target circle.
+
+        targets: list of tuples  (Vector2 centre, radius, color)
+        """
+        if not targets:
+            return pygame.Vector2(0, 0)
+
+        # —— pick the closest target (centre‑to‑rim distance) ——————
+        nearest_c   = None
+        nearest_rad = 0
+        min_dist    = float("inf")
+
+        for centre, radius, _ in targets:
+            dist = self.position.distance_to(centre) - radius
+            if dist < min_dist:
+                min_dist, nearest_c, nearest_rad = dist, centre, radius
+
+        # —— already inside the circle?  no extra steering ————
+        if min_dist <= 0:
+            return pygame.Vector2(0, 0)
+
+        # —— classic “seek” behaviour ————————————————
+        desired = (nearest_c - self.position).normalize() * self.max_speed
+        steer   = desired - self.velocity
+        if steer.length() > self.max_force:
+            steer.scale_to_length(self.max_force)
+        return steer
 
 
     def update(self):
