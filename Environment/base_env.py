@@ -10,6 +10,7 @@ class BaseEnvironment:
         self.height = height
         self.birds  = []
         self.obstacles = []
+        self.targets = []
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("Boids with Toggles")
 
@@ -45,6 +46,13 @@ class BaseEnvironment:
         else:
             raise ValueError(f"Unknown shape: {shape}")
         
+    def create_target(self, radius=80, color=(0, 255, 0)):
+        # Create random spawning of target
+        x = random.uniform(radius, self.width - radius)
+        y = random.uniform(radius, self.height - radius)
+        
+        self.targets.append((pygame.Vector2(x, y), radius, color))
+            
     def _resolve_collision(self, bird):
         """
         Prevent birds from entering obstacles by clamping them to the surface
@@ -131,3 +139,8 @@ class BaseEnvironment:
         for bird in self.birds:
             bird.draw(self.screen)
         pygame.display.flip()
+        
+        # Draw targets
+        for target, radius, color in self.targets:
+            pygame.draw.circle(self.screen, color, (int(target.x), int(target.y)), radius, width=2)
+
