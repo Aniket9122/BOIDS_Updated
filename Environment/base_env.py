@@ -10,6 +10,8 @@ class BaseEnvironment:
         self.height = height
         self.birds  = []
         self.obstacles = []
+        self.use_targets = False          # GUI toggle – default OFF
+        self.targets = []
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("Boids with Toggles")
 
@@ -49,6 +51,24 @@ class BaseEnvironment:
         else:
             raise ValueError(f"Unknown shape: {shape}")
         
+    def create_target(self, radius=80, color=(0, 255, 0)):
+        # Create random spawning of target
+        x = random.uniform(radius, self.width - radius)
+        y = random.uniform(radius, self.height - radius)
+        
+        self.targets.append((pygame.Vector2(x, y), radius, color))
+    
+    # ─── new helper methods (put them near add_bird / create_obstacle) ────────────
+    def create_target(self, radius=60, color=(0, 255, 0)):
+        """Spawn ONE random target circle somewhere in free space."""
+        cx = random.randint(radius, self.width  - radius)
+        cy = random.randint(radius, self.height - radius)
+        self.targets = [(pygame.Vector2(cx, cy), radius, color)]
+
+    def clear_targets(self):
+        """Remove all current targets (called when the toggle is switched off)."""
+        self.targets.clear()
+
     def _resolve_collision(self, bird):
         """
         Prevent birds from entering obstacles by clamping them to the surface
@@ -118,6 +138,15 @@ class BaseEnvironment:
             b.position.y %= self.height
             # prevent obstacle pass through
             self._resolve_collision(b)
+            b.apply_force(b.avoid_obstacles(self.obstacles))
+            # ── only when toggle is ON ───────────────────────────────────────
+            if self.use_targets and self.targets:
+                b.apply_force(b.seek_target(self.targets))
+            # physics integration + housekeeping
+            b.update()
+            b.position.x %= self.width
+            b.position.y %= self.height
+            self._resolve_collision(b)
 
     def render(self):
         self.screen.fill((0, 0, 0))
@@ -135,3 +164,8 @@ class BaseEnvironment:
         for bird in self.birds:
             bird.draw(self.screen)
         pygame.display.flip()
+        
+        # Draw targets
+        for target, radius, color in self.targets:
+            pygame.draw.circle(self.screen, color, (int(target.x), int(target.y)), radius, width=2)
+
