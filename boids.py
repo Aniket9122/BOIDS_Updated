@@ -1,13 +1,14 @@
 # boids.py
 import pygame
 from Environment.env_1 import Env1
+from Environment.env_2 import Env2
 
 pygame.init()
 WIDTH, HEIGHT = 1400, 1000
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock  = pygame.time.Clock()
 
-env = Env1(WIDTH, HEIGHT)
+env = Env2(WIDTH, HEIGHT)
 env.populate_environment()
 
 # button layout
