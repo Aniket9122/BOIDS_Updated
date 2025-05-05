@@ -51,23 +51,71 @@ class BaseEnvironment:
         else:
             raise ValueError(f"Unknown shape: {shape}")
         
-    def create_target(self, radius=80, color=(0, 255, 0)):
-        # Create random spawning of target
-        x = random.uniform(radius, self.width - radius)
-        y = random.uniform(radius, self.height - radius)
+    # def create_target(self, radius=80, color=(0, 255, 0)):
+    #     # Create random spawning of target
+    #     x = random.uniform(radius, self.width - radius)
+    #     y = random.uniform(radius, self.height - radius)
         
-        self.targets.append((pygame.Vector2(x, y), radius, color))
+    #     self.targets.append((pygame.Vector2(x, y), radius, color))
     
-    # ─── new helper methods (put them near add_bird / create_obstacle) ────────────
-    def create_target(self, radius=60, color=(0, 255, 0)):
-        """Spawn ONE random target circle somewhere in free space."""
-        cx = random.randint(radius, self.width  - radius)
-        cy = random.randint(radius, self.height - radius)
-        self.targets = [(pygame.Vector2(cx, cy), radius, color)]
+    def create_target(self, radius=80, color=(0, 255, 0), max_tries=1000):
+        for _ in range(max_tries):
+            x = random.uniform(radius, self.width  - radius)
+            y = random.uniform(radius, self.height - radius)
+            pos = pygame.Vector2(x, y)
+            # ----- check against every obstacle --------------------
+            clear = True
+            for obs in self.obstacles:
+                if obs[0] == 'rect':
+                    _, rect, _ = obs
+                    # inflate rect by target radius and test point‑inside
+                    if rect.inflate(radius * 2, radius * 2).collidepoint(pos):
+                        clear = False
+                        break
+                elif obs[0] == 'circle':
+                    _, centre, r_obs, _ = obs
+                    if pos.distance_to(pygame.Vector2(centre)) < r_obs + radius:
+                        clear = False
+                        break
+            if clear:
+                self.targets.append((pos, radius, color))
+                return
 
     def clear_targets(self):
         """Remove all current targets (called when the toggle is switched off)."""
         self.targets.clear()
+
+    def create_random_obstacle(self):
+        """
+        Spawn ONE random obstacle (rectangle or circle) that fits
+        entirely on‑screen.  Size and colour are picked from sensible
+        ranges so the birds can still find a path around them.
+        """
+        # 50 % chance rectangle vs. circle
+        if random.random() < 0.5:
+            w  = random.randint(80, 200)
+            h  = random.randint(80, 200)
+            x  = random.randint(0,  self.width  - w)
+            y  = random.randint(0,  self.height - h)
+            col = (random.randint(100,255), 50, 50)  # reddish tone
+            self.create_obstacle(
+                'rectangle',
+                x=x, y=y, width=w, height=h, color=col
+            )
+        else:
+            r  = random.randint(40, 120)
+            x  = random.randint(r, self.width  - r)
+            y  = random.randint(r, self.height - r)
+            col = (50, 50, random.randint(100,255))  # bluish tone
+            self.create_obstacle(
+                'circle',
+                x=x, y=y, radius=r, color=col
+            )
+    
+        # ───────────────────────────── clear ─────────────────────────────
+    def clear_obstacles(self):
+        """Remove all obstacles currently in the scene."""
+        self.obstacles.clear()
 
     def _resolve_collision(self, bird):
         """
