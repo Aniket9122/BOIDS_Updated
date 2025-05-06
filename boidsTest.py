@@ -3,17 +3,17 @@ from Environment.env_1 import Env1
 from Environment.env_2 import Env2
 import numpy as np
 from matplotlib import pyplot as plt
+import random
 
 pygame.init()
 WIDTH, HEIGHT = 1400, 1000
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock  = pygame.time.Clock()
 
-env = Env2(WIDTH, HEIGHT)
-env = Env2(WIDTH, HEIGHT)
+env = Env1(WIDTH, HEIGHT)
+env = Env1(WIDTH, HEIGHT)
 env.populate_environment()
-env.use_targets = False
-
+env.create_target(target_seed_flag=False)
 
 # button layout
 FONT = pygame.font.SysFont(None, 24)
@@ -99,42 +99,42 @@ while running:
 
 pygame.quit()
 
-# distances = [np.linalg.norm(np.array(target_pos[i]) - np.array(target_pos[i-1])) for i in range(1, len(target_pos))]
+distances = [np.linalg.norm(np.array(target_pos[i]) - np.array(target_pos[i-1])) for i in range(1, len(target_pos))]
 
 
-# # Calculate speed (distance/time) and plot speed vs number of plots
-# speeds = [distances[i] / time_list[i + 1] for i in range(len(distances))]
-# print(f'Average Speed: {sum(speeds)/len(speeds)}')
+# Calculate speed (distance/time) and plot speed vs number of plots
+speeds = [distances[i] / time_list[i + 1] for i in range(len(distances))]
+print(f'Average Speed: {sum(speeds)/len(speeds)}')
 
-# # Plot speed vs number of plots
-# plt.figure(figsize=(10, 6))
-# plt.plot(range(1, len(speeds) + 1), speeds, marker='o', linestyle='-', color='g')
-# plt.title("Speed to Target (All)")
-# plt.xlabel("Plot Number")
-# plt.ylabel("Speed to Target")
-# plt.grid(True)
-# # plt.show()
+# Plot speed vs number of plots
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, len(speeds) + 1), speeds, marker='o', linestyle='-', color='g')
+plt.title("Speed to Target (All)")
+plt.xlabel("Plot Number")
+plt.ylabel("Speed to Target")
+plt.grid(True)
+# plt.show()
 
-# #plot time required to reach target
-# all_metrics = env.all_metrics
+#plot time required to reach target
+all_metrics = env.all_metrics
 
-# if not all_metrics:
-#     print("No metrics were recorded.")
-# else:
-#     bucket_keys   = sorted(all_metrics[0].keys())
-#     total_counts  = {k: 0 for k in bucket_keys}
-#     for hist in all_metrics:
-#         for k, v in hist.items():
-#             total_counts[k] += v
-#     labels = [f"≤{k}s" for k in bucket_keys]
-#     counts = [total_counts[k] for k in bucket_keys]
+if not all_metrics:
+    print("No metrics were recorded.")
+else:
+    bucket_keys   = sorted(all_metrics[0].keys())
+    total_counts  = {k: 0 for k in bucket_keys}
+    for hist in all_metrics:
+        for k, v in hist.items():
+            total_counts[k] += v
+    labels = [f"≤{k}s" for k in bucket_keys]
+    counts = [total_counts[k] for k in bucket_keys]
 
-#     plt.figure(figsize=(8, 5))
-#     plt.bar(labels, counts)
-#     plt.title("Boids reaching target within time buckets")
-#     plt.xlabel("Time threshold (seconds)")
-#     plt.ylabel("Number of boids")
-#     plt.grid(axis="y")
-#     plt.tight_layout()
-#     plt.savefig("arrival_bar.png", dpi=300)
-#     print(len(all_metrics), " histograms recorded")
+    plt.figure(figsize=(8, 5))
+    plt.bar(labels, counts)
+    plt.title("Boids reaching target within time buckets")
+    plt.xlabel("Time threshold (seconds)")
+    plt.ylabel("Number of boids")
+    plt.grid(axis="y")
+    plt.tight_layout()
+    plt.savefig("arrival_bar.png", dpi=300)
+    print(len(all_metrics), " histograms recorded")

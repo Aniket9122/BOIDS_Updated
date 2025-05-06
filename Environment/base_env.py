@@ -67,11 +67,12 @@ class BaseEnvironment:
         
     #     self.targets.append((pygame.Vector2(x, y), radius, color))
     
-    def create_target(self, target_seed, radius=80, color=(0, 255, 0), max_tries=1000):
+    def create_target(self, target_seed=0,target_seed_flag = True, radius=80, color=(0, 255, 0), max_tries=1000):
         self.current_counts  = {t: 0 for t in TIME_BUCKETS}
         self.initial_target_time = pygame.time.get_ticks()
         for _ in range(max_tries):
-            random.seed(target_seed)  # Set a consistent seed for reproducibility
+            if target_seed_flag:
+                random.seed(target_seed)  # Set a consistent seed for reproducibility
             x = random.uniform(radius, self.width  - radius)
             y = random.uniform(radius, self.height - radius)
             pos = pygame.Vector2(x, y)
