@@ -6,6 +6,7 @@ NUM_BIRDS = 50
 TARGET_X = 0
 TARGET_Y = 0
 RESPAWN_DIST = 200
+TIME_BUCKETS = [5, 10, 15, 20, 25, 30]          # seconds
 
 class BaseEnvironment:
     def __init__(self, width, height):
@@ -15,6 +16,11 @@ class BaseEnvironment:
         self.obstacles = []
         self.use_targets = True          # GUI toggle – default OFF
         self.targets = []
+        # ── metrics for each target ────────────────────────────────
+        self.initial_target_time = 0
+        self.current_counts    = {}   # {1:0,3:0,…}
+        self.all_metrics       = []      # list of dicts, one per target
+
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("Boids with Toggles")
 
@@ -62,6 +68,8 @@ class BaseEnvironment:
     #     self.targets.append((pygame.Vector2(x, y), radius, color))
     
     def create_target(self, radius=80, color=(0, 255, 0), max_tries=1000):
+        self.current_counts  = {t: 0 for t in TIME_BUCKETS}
+        self.initial_target_time = pygame.time.get_ticks()
         for _ in range(max_tries):
             x = random.uniform(radius, self.width  - radius)
             y = random.uniform(radius, self.height - radius)
@@ -187,7 +195,20 @@ class BaseEnvironment:
                 distance = math.hypot(dx, dy)
                 if distance <= t[1]:
                     b.target = True
+                    b.target_time = pygame.time.get_ticks()
     
+    def time_to_target(self):
+        for b in self.birds:
+            time = 0
+            if b.target == True:
+                time = (b.target_time - self.initial_target_time) / 1000
+                print(time, self.initial_target_time)
+                for t in TIME_BUCKETS:
+                    if time <= t:
+                        self.current_counts[t] += 1
+                        break
+        self.all_metrics.append(self.current_counts.copy())
+
     def clear_birds_target(self):
         for b in self.birds:
             b.target = False
@@ -211,7 +232,7 @@ class BaseEnvironment:
             b.position.y %= self.height
             # prevent obstacle pass through
             self._resolve_collision(b)
-            #b.apply_force(b.avoid_obstacles(self.obstacles))
+            b.apply_force(b.avoid_obstacles(self.obstacles))
             # ── only when toggle is ON ───────────────────────────────────────
             if self.use_targets and self.targets:
                 b.apply_force(b.seek_target(self.targets))

@@ -9,7 +9,7 @@ WIDTH, HEIGHT = 1400, 1000
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock  = pygame.time.Clock()
 
-env = Env2(WIDTH, HEIGHT)
+env = Env1(WIDTH, HEIGHT)
 env.populate_environment()
 
 # For Victors Test
@@ -76,6 +76,7 @@ while running:
         time_list.append(pygame.time.get_ticks() - start_time)
         start_time = pygame.time.get_ticks()
         target_pos.append(env.targets[0][0])
+        env.time_to_target()
         env.clear_targets()
         env.clear_birds_target()
         env.create_target()
@@ -99,15 +100,15 @@ while running:
 
 pygame.quit()
 
-print(time_list)
-print([[x, y] for x, y in target_pos])
+# print(time_list)
+# print([[x, y] for x, y in target_pos])
 
 distances = [np.linalg.norm(np.array(target_pos[i]) - np.array(target_pos[i-1])) for i in range(1, len(target_pos))]
-print([float(d) for d in distances])
+# print([float(d) for d in distances])
 
 # Calculate speed (distance/time) and plot speed vs number of plots
 speeds = [distances[i] / time_list[i + 1] for i in range(len(distances))]
-print(f'Average Speed: {speeds/len(speeds)}')
+# print(f'Average Speed: {sum(speeds)/len(speeds)}')
 
 # Plot speed vs number of plots
 plt.figure(figsize=(10, 6))
@@ -116,4 +117,28 @@ plt.title("Speed to Target (No Cohesion)")
 plt.xlabel("Plot Number")
 plt.ylabel("Speed to Target")
 plt.grid(True)
-plt.show()
+# plt.show()
+
+#plot time required to reach target
+all_metrics = env.all_metrics
+
+if not all_metrics:
+    print("No metrics were recorded.")
+else:
+    bucket_keys   = sorted(all_metrics[0].keys())
+    total_counts  = {k: 0 for k in bucket_keys}
+    for hist in all_metrics:
+        for k, v in hist.items():
+            total_counts[k] += v
+    labels = [f"≤{k}s" for k in bucket_keys]
+    counts = [total_counts[k] for k in bucket_keys]
+
+    plt.figure(figsize=(8, 5))
+    plt.bar(labels, counts)
+    plt.title("Boids reaching target within time buckets")
+    plt.xlabel("Time threshold (seconds)")
+    plt.ylabel("Number of boids")
+    plt.grid(axis="y")
+    plt.tight_layout()
+    plt.savefig("arrival_bar.png", dpi=300)
+    print(len(all_metrics), " histograms recorded")
