@@ -12,6 +12,10 @@ class Bird:
         self.max_force = 0.1    
         self.perception = 50    # perception radius
         self.target = False # checks whether the bird has reached the target
+        
+        self.w_align = 1
+        self.w_coh = 1
+        self.w_sep = 1
 
     def apply_force(self, force):
         """Accumulate steering force into acceleration."""
@@ -122,13 +126,10 @@ class Bird:
         """
         Calculate and apply steering from alignment, cohesion, and separation.
         """
-        alignment_weight = 0.4
-        cohesion_weight = 0.4
-        separation_weight = 5
         
-        align_force = self.alignment(boids) * alignment_weight
-        coh_force   = self.cohesion(boids) * cohesion_weight
-        sep_force   = self.separation(boids) * separation_weight
+        align_force = self.alignment(boids) * self.w_align
+        coh_force   = self.cohesion(boids) * self.w_coh
+        sep_force   = self.separation(boids) * self.w_sep
 
         self.apply_force(align_force)
         self.apply_force(coh_force)

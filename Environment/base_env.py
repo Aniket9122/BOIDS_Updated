@@ -211,7 +211,7 @@ class BaseEnvironment:
             b.position.y %= self.height
             # prevent obstacle pass through
             self._resolve_collision(b)
-            #b.apply_force(b.avoid_obstacles(self.obstacles))
+            b.apply_force(b.avoid_obstacles(self.obstacles))
             # ── only when toggle is ON ───────────────────────────────────────
             if self.use_targets and self.targets:
                 b.apply_force(b.seek_target(self.targets))
