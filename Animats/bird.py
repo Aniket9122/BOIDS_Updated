@@ -12,6 +12,7 @@ class Bird:
         self.max_force = 0.1    
         self.perception = 50    # perception radius
         self.target = False # checks whether the bird has reached the target
+        self.target_time = 0 # time when the bird reached the target
         
         self.w_align = 1
         self.w_coh = 1
