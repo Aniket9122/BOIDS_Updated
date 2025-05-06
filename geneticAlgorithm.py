@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Genetic Algorithm Constants
-NO_OF_GENERATIONS = 10
+NO_OF_GENERATIONS = 30
 RUNS_PER_GENERATION = 5
 MUTATION_RATE = 0.2
 WEIGHT_RANGE = (0.1, 2.0)
@@ -29,6 +29,8 @@ best_genome_per_generation = []
 best_fitness_per_generation = []
 average_fitness_per_generation = []
 
+target_seed = 0
+
 for i in range(NO_OF_GENERATIONS):
     genome_list = []
     fitness = []
@@ -41,7 +43,9 @@ for i in range(NO_OF_GENERATIONS):
         
         env = Env2(WIDTH, HEIGHT)
         env.populate_environment()
-        env.create_target()
+        env.create_target(target_seed=target_seed)
+        target_seed += 1
+        
             
         if i < 1:
             w_align, w_coh, w_sep = random_genome()
@@ -65,7 +69,7 @@ for i in range(NO_OF_GENERATIONS):
 
         running = True
         start_time = time.time()
-        duration_limit = 20
+        duration_limit = 45
         max_time = start_time + duration_limit
         time_for_target = pygame.time.get_ticks()
         while running:
@@ -79,7 +83,8 @@ for i in range(NO_OF_GENERATIONS):
                 time_for_target = pygame.time.get_ticks()
                 env.clear_targets()
                 env.clear_birds_target()
-                env.create_target()
+                env.create_target(target_seed=target_seed)
+                target_seed += 1
                 target_pos.append(env.targets[0][0])
                 
             if time.time() > max_time:
@@ -95,6 +100,7 @@ for i in range(NO_OF_GENERATIONS):
             pygame.display.flip()
             clock.tick(60)
         pygame.quit()
+        target_seed = 0
         
         print(f'Genome: {genome_list[j]}\nFitness: {fitness[j]}\n')
 
