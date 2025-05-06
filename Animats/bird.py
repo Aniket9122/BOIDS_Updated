@@ -8,9 +8,11 @@ class Bird:
         self.velocity = pygame.Vector2(random.uniform(-2, 2),
                                        random.uniform(-2, 2))
         self.acceleration = pygame.Vector2(0, 0)
-        self.max_speed = 2      
+        self.max_speed = 4     
         self.max_force = 0.1    
         self.perception = 50    # perception radius
+        self.target = False # checks whether the bird has reached the target
+        self.target_time = 0 # time when the bird reached the target
 
     def apply_force(self, force):
         """Accumulate steering force into acceleration."""
@@ -121,9 +123,13 @@ class Bird:
         """
         Calculate and apply steering from alignment, cohesion, and separation.
         """
-        align_force = self.alignment(boids)
-        coh_force   = self.cohesion(boids)
-        sep_force   = self.separation(boids)
+        alignment_weight = 0.4
+        cohesion_weight = 0.4
+        separation_weight = 5
+        
+        align_force = self.alignment(boids) * alignment_weight
+        coh_force   = self.cohesion(boids) * cohesion_weight
+        sep_force   = self.separation(boids) * separation_weight
 
         self.apply_force(align_force)
         self.apply_force(coh_force)
@@ -159,7 +165,7 @@ class Bird:
         steer   = desired - self.velocity
         if steer.length() > self.max_force:
             steer.scale_to_length(self.max_force)
-        return steer
+        return steer * 0.3
 
 
     def update(self):
