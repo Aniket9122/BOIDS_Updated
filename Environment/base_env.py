@@ -202,16 +202,16 @@ class BaseEnvironment:
             if self.use_separation:
                 b.apply_force( b.separation(self.birds) )
             # apply force to prevent obstacle collisions
-            obs_force = b.avoid_obstacles(self.obstacles)
-            b.apply_force(obs_force)
-            b.apply_force(b.avoid_obstacles(self.obstacles))
-            b.update()
+            #obs_force = b.avoid_obstacles(self.obstacles)
+            #b.apply_force(obs_force)
+            #b.apply_force(b.avoid_obstacles(self.obstacles))
+            #b.update()
             # wrap‐around
             b.position.x %= self.width
             b.position.y %= self.height
             # prevent obstacle pass through
             self._resolve_collision(b)
-            b.apply_force(b.avoid_obstacles(self.obstacles))
+            #b.apply_force(b.avoid_obstacles(self.obstacles))
             # ── only when toggle is ON ───────────────────────────────────────
             if self.use_targets and self.targets:
                 b.apply_force(b.seek_target(self.targets))
@@ -219,7 +219,7 @@ class BaseEnvironment:
             b.update()
             b.position.x %= self.width
             b.position.y %= self.height
-            self._resolve_collision(b)
+            #self._resolve_collision(b)
 
     def render(self):
         self.screen.fill((0, 0, 0))

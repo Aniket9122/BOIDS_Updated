@@ -1,6 +1,8 @@
 import pygame
 from Environment.env_1 import Env1
 from Environment.env_2 import Env2
+import numpy as np
+from matplotlib import pyplot as plt
 
 pygame.init()
 WIDTH, HEIGHT = 1400, 1000
@@ -40,6 +42,7 @@ running = True
 start_time = pygame.time.get_ticks()
 time_list = []
 target_pos = []
+count = 0
 while running:
     for ev in pygame.event.get():
         if ev.type == pygame.QUIT:
@@ -68,6 +71,7 @@ while running:
     
     env.update_birds_in_target()
     if env.check_birds_in_target() == True:
+        count += 1
         print(pygame.time.get_ticks() - start_time)
         time_list.append(pygame.time.get_ticks() - start_time)
         start_time = pygame.time.get_ticks()
@@ -75,8 +79,9 @@ while running:
         env.clear_targets()
         env.clear_birds_target()
         env.create_target()
+    if count == 20:
+        running = False
         
-
     # update & draw flock
     env.update()
     env.render()
@@ -93,5 +98,22 @@ while running:
     clock.tick(60)
 
 pygame.quit()
+
 print(time_list)
 print([[x, y] for x, y in target_pos])
+
+distances = [np.linalg.norm(np.array(target_pos[i]) - np.array(target_pos[i-1])) for i in range(1, len(target_pos))]
+print([float(d) for d in distances])
+
+# Calculate speed (distance/time) and plot speed vs number of plots
+speeds = [distances[i] / time_list[i + 1] for i in range(len(distances))]
+print(f'Average Speed: {speeds/len(speeds)}')
+
+# Plot speed vs number of plots
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, len(speeds) + 1), speeds, marker='o', linestyle='-', color='g')
+plt.title("Speed to Target (No Cohesion)")
+plt.xlabel("Plot Number")
+plt.ylabel("Speed to Target")
+plt.grid(True)
+plt.show()
